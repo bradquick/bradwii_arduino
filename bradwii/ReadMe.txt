@@ -8,7 +8,7 @@ Download:
 
 The Arduino version can be downloaded here:
 
-https://github.com/bradquick/bradwii_arduino
+https://github.com/bradquick/bradwii_arduino/archive/master.zip
 
 Features:
 
