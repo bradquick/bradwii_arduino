@@ -26,14 +26,14 @@ Initialization of the I2C bus interface. Need to be called only once
 *************************************************************************/
 void lib_i2c_init(void)
    {
-   lib_i2c_setclockspeed(I2C_100_MHZ);
+   lib_i2c_setclockspeed(I2C_100_KHZ);
    }
 
 void lib_i2c_setclockspeed(unsigned char speed)
    {
    TWSR = 0;                         /* no prescaler */
-   if (speed==I2C_100_MHZ) TWBR = ((F_CPU/100000L)-16)/2;  /* must be > 10 for stable operation */
-   else if (speed==I2C_400_MHZ) TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
+   if (speed==I2C_100_KHZ) TWBR = ((F_CPU/100000L)-16)/2;  /* must be > 10 for stable operation */
+   else if (speed==I2C_400_KHZ) TWBR = ((F_CPU / 400000L) - 16) / 2; // change the I2C clock rate to 400kHz
    }
    
 /*************************************************************************   

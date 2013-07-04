@@ -172,7 +172,12 @@ void lib_fp_lowpassfilter(fixedpointnum *variable,fixedpointnum newvalue,fixedpo
    // If timesliver is very small, resolution can be gained by keeping timesliver shifted left by some extra bits.
    // Make sure variable can be also shifted left this same number of bits or else the following will overflow! 
    fixedpointnum fraction=lib_fp_multiply(timesliver,oneoverperiod);
+   
    *variable=(lib_fp_multiply(fraction,newvalue)+lib_fp_multiply((FIXEDPOINTONE<<timesliverextrashift)-fraction,*variable))>>timesliverextrashift;
+
+   // the adder combines adding .5 for rounding error and adding .5 in the direction the newvalue is trying to pull us
+   // So we can zero in on the desired value.
+   if (newvalue>*variable) ++*variable;
    }
 
 fixedpointnum lib_fp_abs(fixedpointnum fp)
@@ -304,7 +309,7 @@ fixedpointnum lib_fp_atan2(fixedpointnum y, fixedpointnum x)
       y *= 0x1000;
       }
 
-   for (int i=1; i<10; i++) // increase the accuracy by increasing the number of cycles (was 12)
+   for (int i=1; i<11; i++) // increase the accuracy by increasing the number of cycles (was 12)
       {
       if   (y>=0)
          {

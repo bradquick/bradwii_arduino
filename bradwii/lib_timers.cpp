@@ -81,6 +81,47 @@ unsigned long lib_timers_getcurrentmicroseconds()
    #endif
    }
 
+#elif (defined(USETIMER3FORGENERALTIMER))
+
+void lib_timers_init()
+   { // needs to be called once in the program before timers can be used
+   TCCR3B |= (1 << CS31); // Set up timer at Fcpu/8
+   // at 16mhz, this gives 0.0000005 seconds per count
+   // our 16 bit counter will overflow in 0.032768 seconds
+   // We cascade this into an unsigned long.
+
+   //Enable Overflow Interrupt Enable
+   TIMSK3 |= (1 << TOIE3);   // enable timer overflow interrupt
+   
+   // make sure interrupts are enabled
+   sei();
+   }
+
+ISR(TIMER3_OVF_vect)
+   {
+   // This is the interrupt service routine for TIMER3 OVERFLOW Interrupt.
+   // Increment the overflow count
+   ++timeroverflowcount;
+   }
+   
+unsigned long lib_timers_getcurrentmicroseconds()
+   { // returns microseconds since startup.  This mainly used internally because it wraps around.
+   cli();
+   unsigned int countervalue=TCNT3;
+   long overflowcount=timeroverflowcount;
+   sei();
+   
+   #if (F_CPU==16000000)
+      return(((overflowcount<<16)+countervalue)>>1);
+   #elif (F_CPU==8000000)
+      return(((overflowcount<<16)+countervalue));
+   #elif (F_CPU==1000000)
+      return(((overflowcount<<16)+countervalue)<<3);
+   #else
+      need to add code for your clock rate
+   #endif
+   }
+
 #else
 void lib_timers_init()
    { // needs to be called once in the program before timers can be used

@@ -56,7 +56,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       }\
 
 void lib_digitalio_initpin(unsigned char pinnumber,unsigned char output)
-   { // set pin pinnumber to be an output if output==1, othewise set it to be an input
+   { // set pin pinnumber to be an output if output | DIGITALOUTPUT, othewise set it to be an input
    unsigned char port=pinnumber & 0xf0;
    pinnumber &= 0x0f;
 

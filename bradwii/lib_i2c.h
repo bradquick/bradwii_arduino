@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define    I2C_READ   1
 #define    I2C_WRITE   0
 
-#define I2C_100_MHZ 0
-#define I2C_400_MHZ 1
+#define I2C_100_KHZ 0
+#define I2C_400_KHZ 1
 
 void lib_i2c_init(void);
 void lib_i2c_setclockspeed(unsigned char speed);
