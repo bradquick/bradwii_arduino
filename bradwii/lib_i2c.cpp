@@ -21,6 +21,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "lib_i2c.h"
 
+unsigned int lib_i2c_error_count=0;
+
+unsigned char lib_i2c_waittransmissioncomplete()
+   { // returns 1 on error
+   // wait until transmission completed
+   unsigned int count=255;
+   while(!(TWCR & (1<<TWINT)))
+      {
+      if (--count==0) // we timed out
+         {
+         TWCR=0; // reset
+         ++lib_i2c_error_count;
+         return(1);
+         }
+      }
+   return(0);
+   }
+
 /*************************************************************************
 Initialization of the I2C bus interface. Need to be called only once
 *************************************************************************/
@@ -48,7 +66,7 @@ unsigned char lib_i2c_start(unsigned char address)
    TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
 
    // wait until transmission completed
-   while(!(TWCR & (1<<TWINT)));
+   lib_i2c_waittransmissioncomplete();
 
    // check value of TWI Status Register. Mask prescaler bits.
    twst = TW_STATUS & 0xF8;
@@ -59,7 +77,7 @@ unsigned char lib_i2c_start(unsigned char address)
    TWCR = (1<<TWINT) | (1<<TWEN);
 
    // wail until transmission completed and ACK/NACK has been received
-   while(!(TWCR & (1<<TWINT)));
+   lib_i2c_waittransmissioncomplete();
 
    // check value of TWI Status Register. Mask prescaler bits.
    twst = TW_STATUS & 0xF8;
@@ -89,7 +107,7 @@ char lib_i2c_start_wait(unsigned char address)
       TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
    
       // wait until transmission completed
-      while(!(TWCR & (1<<TWINT)));
+      lib_i2c_waittransmissioncomplete();
    
       // check value of TWI Status Register. Mask prescaler bits.
       twst = TW_STATUS & 0xF8;
@@ -100,7 +118,7 @@ char lib_i2c_start_wait(unsigned char address)
       TWCR = (1<<TWINT) | (1<<TWEN);
    
       // wail until transmission completed
-      while(!(TWCR & (1<<TWINT)));
+      lib_i2c_waittransmissioncomplete();
    
       // check value of TWI Status Register. Mask prescaler bits.
       twst = TW_STATUS & 0xF8;
@@ -157,8 +175,6 @@ void lib_i2c_stop(void)
  Return:   0 write successful 
            1 write failed
 *************************************************************************/
-unsigned int lib_i2c_error_count=0;
-
 unsigned char lib_i2c_write( unsigned char data )
    {   
    uint8_t   twst;
@@ -168,16 +184,7 @@ unsigned char lib_i2c_write( unsigned char data )
    TWCR = (1<<TWINT) | (1<<TWEN);
 
    // wait until transmission completed
-   unsigned int count=255;
-   while(!(TWCR & (1<<TWINT)))
-      {
-      if (--count==0) // we timed out
-         {
-         TWCR=0; // reset
-         ++lib_i2c_error_count;
-         return(1);
-         }
-      }
+   if (lib_i2c_waittransmissioncomplete()) return(1);
 
    // check value of TWI Status Register. Mask prescaler bits
    twst = TW_STATUS & 0xF8;
@@ -195,7 +202,7 @@ Return:  byte read from I2C device
 unsigned char lib_i2c_readack(void)
    {
    TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
-   while(!(TWCR & (1<<TWINT)));    
+   lib_i2c_waittransmissioncomplete();
 
    return TWDR;
 
@@ -210,7 +217,7 @@ Return:  byte read from I2C device
 unsigned char lib_i2c_readnak(void)
    {
    TWCR = (1<<TWINT) | (1<<TWEN);
-   while(!(TWCR & (1<<TWINT)));
+   lib_i2c_waittransmissioncomplete();
 
    return TWDR;
    }

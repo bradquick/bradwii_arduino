@@ -310,11 +310,17 @@ typedef struct
 #define USB_CDC_TX                 3
 #define USB_CDC_RX                 2
 
-#define TX_RX_LED_INIT	DDRD |= (1<<5), DDRB |= (1<<0)
-#define TXLED0			PORTD |= (1<<5)
-#define TXLED1			PORTD &= ~(1<<5)
-#define RXLED0			PORTB |= (1<<0)
-#define RXLED1			PORTB &= ~(1<<0)
+#define TX_RX_LED_INIT	//DDRD |= (1<<5)
+#define TXLED0			//PORTD |= (1<<5)
+#define TXLED1			//PORTD &= ~(1<<5)
+#define RXLED0			//PORTD |= (1<<5)
+#define RXLED1			//PORTD &= ~(1<<5)
+
+//#define TX_RX_LED_INIT	DDRD |= (1<<5), DDRB |= (1<<0)
+//#define TXLED0			PORTD |= (1<<5)
+//#define TXLED1			PORTD &= ~(1<<5)
+//#define RXLED0			PORTB |= (1<<0)
+//#define RXLED1			PORTB &= ~(1<<0)
 
 typedef struct
 {

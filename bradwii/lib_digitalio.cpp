@@ -1166,6 +1166,8 @@ ISR (INTx_vect) \
       }\
    }
 
+#include "bradwii.h"
+extern globalstruct global;
 
 #ifdef PCINT0_7PORT
 unsigned char interruptlastpinstate0_7=0;
@@ -1174,6 +1176,7 @@ ISR (PCINT0_vect)
    unsigned char newpins=PCINT0_7PORT;
    unsigned char changedpins=newpins^interruptlastpinstate0_7;
    interruptlastpinstate0_7=newpins;
+   
    sei();
    #ifdef PCINTERRUPT0PORTANDPIN
       CHECKPCINTMACRO(PCINTERRUPT0PORTANDPIN,digitalcallbackpcint0);
