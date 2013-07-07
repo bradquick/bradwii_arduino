@@ -157,6 +157,8 @@ void lib_i2c_stop(void)
  Return:   0 write successful 
            1 write failed
 *************************************************************************/
+unsigned int lib_i2c_error_count=0;
+
 unsigned char lib_i2c_write( unsigned char data )
    {   
    uint8_t   twst;
@@ -166,7 +168,16 @@ unsigned char lib_i2c_write( unsigned char data )
    TWCR = (1<<TWINT) | (1<<TWEN);
 
    // wait until transmission completed
-   while(!(TWCR & (1<<TWINT)));
+   unsigned int count=255;
+   while(!(TWCR & (1<<TWINT)))
+      {
+      if (--count==0) // we timed out
+         {
+         TWCR=0; // reset
+         ++lib_i2c_error_count;
+         return(1);
+         }
+      }
 
    // check value of TWI Status Register. Mask prescaler bits
    twst = TW_STATUS & 0xF8;
@@ -181,7 +192,7 @@ Read one byte from the I2C device, request more data from device
 
 Return:  byte read from I2C device
 *************************************************************************/
-unsigned char lib_i2c_readAck(void)
+unsigned char lib_i2c_readack(void)
    {
    TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
    while(!(TWCR & (1<<TWINT)));    
@@ -196,7 +207,7 @@ Read one byte from the I2C device, read is followed by a stop condition
 
 Return:  byte read from I2C device
 *************************************************************************/
-unsigned char lib_i2c_readNak(void)
+unsigned char lib_i2c_readnak(void)
    {
    TWCR = (1<<TWINT) | (1<<TWEN);
    while(!(TWCR & (1<<TWINT)));
@@ -218,7 +229,7 @@ unsigned char lib_i2c_readreg(unsigned char address,unsigned char reg)
    lib_i2c_write(reg); 
    lib_i2c_rep_start((address<<1)+I2C_READ);
 
-   unsigned char returnvalue = lib_i2c_readNak();
+   unsigned char returnvalue = lib_i2c_readnak();
 
    lib_i2c_stop();
    
@@ -233,9 +244,9 @@ void lib_i2c_readdata(unsigned char address,unsigned char reg,unsigned char *dat
 
    while (--length)
       {
-      *data++ = lib_i2c_readAck();
+      *data++ = lib_i2c_readack();
       }
-   *data = lib_i2c_readNak();
+   *data = lib_i2c_readnak();
 
    lib_i2c_stop();
    }

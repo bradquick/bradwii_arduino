@@ -98,6 +98,9 @@ serialcallbackfunctptr serialrxcallback[NUMSERIALPORTS];
 
 int lib_serial_availableoutputbuffersize(unsigned char serialportnumber)
    { // returns how many more bytes can fit in the outputbuffer
+#ifdef USESERIALPORTUSB
+   if (serialportnumber==USBPORTNUMBER) return(9999);
+#endif
    int startindex=serialtxbufferstartindex[serialportnumber];
    int endindex=serialtxbufferendindex[serialportnumber];
    
@@ -105,6 +108,7 @@ int lib_serial_availableoutputbuffersize(unsigned char serialportnumber)
       return(startindex-endindex-1);
    else
       return(serialtxbuffersize[serialportnumber]-(endindex-startindex)-1);
+
    }
 
 void lib_serial_setrxcallback(unsigned char serialportnumber,serialcallbackfunctptr callback)
