@@ -400,6 +400,12 @@ int main(void)
       // calculate pid outputs based on our angleerrors as inputs
       fixedpointnum pidoutput[3];
       
+      // Gain Scheduling essentialy modifies the gains depending on
+      // throttle level. If GAIN_SCHEDULING_FACTOR is 1.0, it multiplies PID outputs by 1.5 when at full throttle,
+      // 1.0 when at mid throttle, and .5 when at zero throttle.  This helps
+      // eliminate the wobbles when decending at low throttle.
+      fixedpointnum gainschedulingmultiplier=lib_fp_multiply(throttleoutput-FIXEDPOINTCONSTANT(.5),FIXEDPOINTCONSTANT(GAIN_SCHEDULING_FACTOR))+FIXEDPOINTONE;
+      
       for (int x=0;x<3;++x)
          {
          integratedangleerror[x]+=lib_fp_multiply(angleerror[x],global.timesliver);
@@ -411,6 +417,9 @@ int main(void)
          pidoutput[x]=lib_fp_multiply(angleerror[x],usersettings.pid_pgain[x])
             -lib_fp_multiply(global.gyrorate[x],usersettings.pid_dgain[x])
             +(lib_fp_multiply(integratedangleerror[x],usersettings.pid_igain[x])>>4);
+            
+         // add gain scheduling.  
+         pidoutput[x]=lib_fp_multiply(gainschedulingmultiplier,pidoutput[x]);
          }
 
       lib_fp_constrain(&throttleoutput,0,FIXEDPOINTONE);

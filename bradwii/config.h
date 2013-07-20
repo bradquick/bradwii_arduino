@@ -31,10 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_SIRIUS_AIR_GPS
 
 // Choose the type of r/c reciever that will be used
-#define RX_TYPE RX_NORMAL
+//#define RX_TYPE RX_NORMAL
 //#define RX_TYPE RX_CPPM
 //#define RX_TYPE RX_DSM2_1024
-//#define RX_TYPE RX_DSM2_2048
+#define RX_TYPE RX_DSM2_2048
 //#define RX_DSM2_SERIAL_PORT 1
 
 // Choose a channel order if you don't like the default for your receiver type selected above
@@ -53,8 +53,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define STICK_DISARM STICK_COMMAND_YAW_LOW
 
 // uncomment the following two lines to allow arming using yaw, roll, and pitch all at once
-//#define STICK_ARM STICK_COMMAND_YAW_HIGH+STICK_COMMAND_ROLL_HIGH+STICK_COMMAND_PITCH_LOW
-//#define STICK_DISARM STICK_COMMAND_YAW_LOW+STICK_COMMAND_ROLL_LOW+STICK_COMMAND_PITCH_LOW
+#define STICK_ARM STICK_COMMAND_YAW_HIGH+STICK_COMMAND_ROLL_HIGH+STICK_COMMAND_PITCH_LOW
+#define STICK_DISARM STICK_COMMAND_YAW_LOW+STICK_COMMAND_ROLL_LOW+STICK_COMMAND_PITCH_LOW
 
 // Choose an aircraft configuration (defaults to QUADX)
 //#define AIRCRAFT_CONFIGURATION QUADX
@@ -101,8 +101,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUX_MID_RANGE_HIGH 1700
 
 // Define low and high values for stick commands
-#define STICK_RANGE_LOW 1150
-#define STICK_RANGE_HIGH 1850
+#define STICK_RANGE_LOW 1170
+#define STICK_RANGE_HIGH 1830
 
 // un-comment if you don't want to include code for a compass, otherwise it will default to what the control board has on it
 //#define COMPASS_TYPE NO_COMPASS
@@ -138,3 +138,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define UNCRAHSABLE_MAX_ALTITUDE_OFFSET 30.0 // 30 meters above where uncrashability was enabled
 #define UNCRAHSABLE_RADIUS 50.0 // 50 meter radius
+
+// Uncomment the following line if you want to turn off gain scheduling.  Gain scheduling adjusts the PID gains
+// depending on the level of throttle.  It attempts to eliminate the wobbles while decending under low throttle.
+#define GAIN_SCHEDULING_FACTOR 1.0
