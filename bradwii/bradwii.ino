@@ -161,6 +161,8 @@ int main(void)
                #if (GPS_TYPE!=NO_GPS)
                   navigation_sethometocurrentlocation();
                #endif
+               global.heading_when_armed=global.currentestimatedeulerattitude[YAWINDEX];
+               global.altitude_when_armed=global.barorawaltitude;
                }
             }
          else if (!(global.activecheckboxitems & CHECKBOXMASKARM)) global.armed=0;
