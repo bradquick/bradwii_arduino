@@ -32,7 +32,7 @@ void lib_fp_constrain180(fixedpointnum *lf)
    }
 
 //             D1 C1 B1 A1 (x)
-//              x D2 C2 B2 A2 (y)
+//           x D2 C2 B2 A2 (y)
 // -----------------------
 // z0 y0 D0 C0 B0 A0 x0 w0
 
@@ -160,7 +160,6 @@ fixedpointnum lib_fp_multiply(fixedpointnum x,fixedpointnum y)
    return((xh*yh)<<FIXEDPOINTSHIFT)+xh*yl+yh*xl+((xl*yl)>>FIXEDPOINTSHIFT);
    }
 #endif
-
 
 void lib_fp_lowpassfilter(fixedpointnum *variable,fixedpointnum newvalue,fixedpointnum timesliver,fixedpointnum oneoverperiod,int timesliverextrashift)
    { // updates a low pass filter variable.  It uses timesliver.  oneoverperiod is one over the time period 

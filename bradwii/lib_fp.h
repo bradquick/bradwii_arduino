@@ -58,6 +58,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 void lib_fp_constrain(fixedpointnum *lf,fixedpointnum low,fixedpointnum high);
 void lib_fp_constrain180(fixedpointnum *lf);
 fixedpointnum lib_fp_multiply(fixedpointnum x,fixedpointnum y);
+
 void lib_fp_lowpassfilter(fixedpointnum *variable,fixedpointnum newvalue,fixedpointnum timesliver,fixedpointnum oneoverperiod,int timesliverextrashift);
 fixedpointnum lib_fp_abs(fixedpointnum fp);
 fixedpointnum lib_fp_sine(fixedpointnum angle);
