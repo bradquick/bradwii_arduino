@@ -24,19 +24,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "options.h"
 
 // Choose your control board:
-#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_PRO_2
+//#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_PRO_2
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_328P
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_NANOWII
-//#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_POCKET_QUAD
+#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_POCKET_QUAD
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_SIRIUS_AIR
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_SIRIUS_AIR_GPS
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_SIRIUS_PARIS_V4
 
 // Choose the type of r/c reciever that will be used
-#define RX_TYPE RX_NORMAL
+//#define RX_TYPE RX_NORMAL
 //#define RX_TYPE RX_CPPM
 //#define RX_TYPE RX_DSM2_1024
-//#define RX_TYPE RX_DSM2_2048
+#define RX_TYPE RX_DSM2_2048
 //#define RX_DSM2_SERIAL_PORT 1
 
 // Choose a channel order if you don't like the default for your receiver type selected above
@@ -97,6 +97,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MAX_MOTOR_OUTPUT 2000
 #define FAILSAFE_MOTOR_OUTPUT 1200 // throttle setting for bringing the aircraft down at a safe speed
 
+// Un-comment and set to YES or NO to override the default value.
+// When YES, motors will stop when throttle stick is below STICK_RANGE_LOW (see below) and not in acro or semi acro mode.
+//#define MOTORS_STOP YES
+
 // set the minimum motor output when armed. If not set, 1067 will be used as a default
 //#define ARMED_MIN_MOTOR_OUTPUT 1067 // motors spin slowly when armed
 //#define ARMED_MIN_MOTOR_OUTPUT 1170 // motors spin slowly when armed (for blheli flashed q-brain)
@@ -132,6 +136,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // un-comment if you don't want to include autotune code
 //#define NO_AUTOTUNE
+
 // To adjust how agressive the tuning is, adjust the AUTOTUNEMAXOSCILLATION value.  A larger
 // value will result in more agressive tuning. A lower value will result in softer tuning.
 // It will rock back and forth between -AUTOTUNE_TARGET_ANGLE and AUTOTUNE_TARGET_ANGLE degrees
@@ -147,7 +152,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // then you are probably getting vibration feeding from your motors to your gyros.
 // The first step is to isolate the control board from the frame of the aircraft (google Sorbothane).  If all else fails,
 // increase the GYRO_LOW_PASS_FILTER from 0 through 10.  The lowest value that works correctly is the one you should use.
-#define GYRO_LOW_PASS_FILTER 0
+// Leave comment to use the default value.
+//#define GYRO_LOW_PASS_FILTER 0
 
 #define UNCRAHSABLE_MAX_ALTITUDE_OFFSET 30.0 // 30 meters above where uncrashability was enabled
 #define UNCRAHSABLE_RADIUS 50.0 // 50 meter radius
