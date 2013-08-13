@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright 2013 Brad Quick
 
 This program is free software: you can redistribute it and/or modify

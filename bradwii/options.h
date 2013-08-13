@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright 2013 Brad Quick
 
 This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// This file contains options that can be set in the config.h file.  
+// This file contains options that can be set in the config.h file.
 
 #pragma once
 
@@ -70,6 +70,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NO_COMPASS 0
 #define HMC5883 1
 #define HMC5843 2
+#define MAG3110 3
 
 // BAROMETER_TYPE's
 #define NO_BAROMETER 0

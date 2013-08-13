@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright 2013 Brad Quick
 
 This program is free software: you can redistribute it and/or modify
@@ -35,8 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Choose the type of r/c reciever that will be used
 //#define RX_TYPE RX_NORMAL
 //#define RX_TYPE RX_CPPM
-//#define RX_TYPE RX_DSM2_1024
-#define RX_TYPE RX_DSM2_2048
+#define RX_TYPE RX_DSM2_1024
+// #define RX_TYPE RX_DSM2_2048
 //#define RX_DSM2_SERIAL_PORT 1
 
 // Choose a channel order if you don't like the default for your receiver type selected above
@@ -118,13 +118,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define STICK_RANGE_HIGH 1830
 
 // un-comment if you don't want to include code for a compass, otherwise it will default to what the control board has on it
-//#define COMPASS_TYPE NO_COMPASS
+#define COMPASS_TYPE MAG3110
 
 // un-comment if you don't want to include code for a barometer, otherwise it will default to what the control board has on it
 //#define BAROMETER_TYPE NO_BAROMETER
 
 // Get your magnetic decliniation from here : http://magnetic-declination.com/
-#define MAG_DECLINATION_DEGREES  -13.4 // for Hyde Park, NY
+#define MAG_DECLINATION_DEGREES  15.85f // for Portland, OR
 
 // ESCs calibration
 // To calibrate all ESCs connected to the aircraft at the same time (useful to avoid unplugging/re-plugging each ESC)
@@ -144,7 +144,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // the wobbles after a quick angle change.
 // Always autotune on a full battery.
 #define AUTOTUNE_MAX_OSCILLATION 1.0
-#define AUTOTUNE_TARGET_ANGLE 20.0 
+#define AUTOTUNE_TARGET_ANGLE 20.0
 #define AUTOTUNE_D_MULTIPLIER 1.2
 
 // Gyro low pass filter.
