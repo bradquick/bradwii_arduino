@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright 2013 Brad Quick
 
 This program is free software: you can redistribute it and/or modify
@@ -28,9 +28,9 @@ extern usersettingsstruct usersettings;
 // note: when adding new compassas, these functions need to be included:
 // void initcompass()  // initializes the compass
 // void calibratecompass(); // starts a 30 second calibration procedure
-// char readcompass()  // loads global.compassvector[] with the compass vector as fixedpointnum.  
+// char readcompass()  // loads global.compassvector[] with the compass vector as fixedpointnum.
 //                       // returns 1 when returning a new reading, 0 if it's not time to read yet.
-//                     // A unit vector good, but the length of the vector really isn't that important.  
+//                     // A unit vector good, but the length of the vector really isn't that important.
 //                     // We are more concerned with the direction of the vector.
 
 
@@ -39,17 +39,128 @@ extern usersettingsstruct usersettings;
 void initcompass()
    {
    }
-   
+
 void calibratecompass()
    {
    }
-   
+
 char readcompass()
    {
    return(0);
    }
 
 #else
+
+#if (COMPASS_TYPE==MAG3110)
+
+#define MAG_ADDRESS       0x0E
+#define MAG_DATA_REGISTER 0x01
+#define MAG_CTRL_REG1     0x10
+#define MAG_CTRL_REG2     0x11
+
+unsigned long compasstimer;
+
+void compassreadrawvalues(int *compassrawvalues) {
+   unsigned char data[6];
+   lib_i2c_readdata(MAG_ADDRESS,MAG_DATA_REGISTER,data,6);
+
+   /*
+      You may need to invert values here depending on the orientation
+      of your magnetometer.
+   */
+   COMPASS_ORIENTATION(compassrawvalues,
+       ((data[0]<<8) | data[1]),
+      -((data[2]<<8) | data[3]),
+       ((data[4]<<8) | data[5])
+   );
+
+   // set the timer so we know when we can take our next reading
+   compasstimer = lib_timers_starttimer();
+}
+
+void wait_and_continue(unsigned long microseconds) {
+   while (lib_timers_gettimermicroseconds(compasstimer) < microseconds) {}
+}
+
+void calibratecompass() {
+   int minvalues[3] = {0};
+   int maxvalues[3] = {0};
+   int rawvalues[3];
+   unsigned long testtimer;
+
+   // find the zero offsets for the raw compass readings.  Assume that someone is flipping
+   // the copter in all directions for the next 30 seconds
+
+   // wait until a new reading is ready
+   wait_and_continue(70000L);
+
+   compassreadrawvalues(rawvalues);
+
+   // use the general timer to count off our 30 seconds
+   testtimer = lib_timers_starttimer();
+   while (lib_timers_gettimermicroseconds(testtimer) < 30000000L) {
+      // wait until a new reading is ready
+      wait_and_continue(70000L);
+      compassreadrawvalues(rawvalues);
+
+      // the compass vectors that we gather should represent a sphere.  The problem is that the
+      // center of the sphere may not be at 0,0,0 so we need to find out what they are
+      for (int axis=0;axis<3;++axis) {
+         if (rawvalues[axis] < minvalues[axis]) minvalues[axis] = rawvalues[axis];
+         if (rawvalues[axis] > maxvalues[axis]) maxvalues[axis] = rawvalues[axis];
+      }
+   }
+
+   for (int axis=0;axis<3;++axis) {
+      usersettings.compasszerooffset[axis]            = (minvalues[axis] + maxvalues[axis]) / 2;
+      usersettings.compasscalibrationmultiplier[axis] = (1000L << FIXEDPOINTSHIFT) / (maxvalues[axis] - minvalues[axis]);
+   }
+}
+
+void mag_command(unsigned char value, int reg_num) {
+   int reg;
+   if (reg_num == 1) reg = MAG_CTRL_REG1;
+   if (reg_num == 2) reg = MAG_CTRL_REG2;
+
+   lib_timers_delaymilliseconds(100);
+   lib_i2c_writereg(MAG_ADDRESS, reg, value);
+}
+
+void initcompass() {
+   /*
+      Values for control register 1
+      0x80 = DR:20Hz ; OS ratio:64 ; ADC rate: 1280Hz (from Multiwii 2.2)
+      0x42 = DR:20Hz ; OS ratio:16 ; ADC rate:  320Hz (a guess)
+   */
+
+   mag_command(0x00, 1); // put in standby mode (not sure if this is useful)
+   mag_command(0x80, 1); // set output, sampling, and ADC rates
+   mag_command(0x11, 2); // set mag to automatically reset when it sees mag spikes
+   mag_command(0x01, 1); // put mag in active mode
+}
+
+char readcompass() {
+   fixedpointnum a;
+   fixedpointnum b;
+   // returns 1 if we actually read something, zero otherwise.  Sets global.compassnorthvector to a unit vector (approximately)
+   if (lib_timers_gettimermicroseconds(compasstimer) >= 70000L) {
+      int compassrawvalues[3];
+      compassreadrawvalues(compassrawvalues);
+
+      // convert the raw values into a unit vector
+      for (int axis=0;axis<3;++axis) {
+         a = (compassrawvalues[axis] - usersettings.compasszerooffset[axis]) << 7;
+         b = usersettings.compasscalibrationmultiplier[axis];
+
+         global.compassvector[axis] = lib_fp_multiply(a,b);
+      }
+      return(1);
+   }
+
+   return(0);
+}
+
+#endif
 
 #if (COMPASS_TYPE==HMC5843 || COMPASS_TYPE==HMC5883)
 
@@ -68,13 +179,13 @@ void compassreadrawvalues(int *compassrawvalues)
    {
    unsigned char data[6];
    lib_i2c_readdata(MAG_ADDRESS,MAG_DATA_REGISTER,data,6);
-   
+
 #if (COMPASS_TYPE==HMC5843)
    COMPASS_ORIENTATION(compassrawvalues, ((data[0]<<8) | data[1]) ,
                      ((data[2]<<8) | data[3]) ,
                      ((data[4]<<8) | data[5]) );
 #endif
-#if (COMPASS_TYPE==HMC5883)  
+#if (COMPASS_TYPE==HMC5883)
     COMPASS_ORIENTATION(compassrawvalues, ((data[0]<<8) | data[1]) ,
                      ((data[4]<<8) | data[5]) ,
                      ((data[2]<<8) | data[3]) );
@@ -90,12 +201,12 @@ void calibratecompass()
    int rawvalues[3];
    // find the zero offsets for the raw compass readings.  Assume that someone is flipping
    // the copter in all directions for the next 30 seconds
-   
+
    // wait until a new reading is ready
    while (lib_timers_gettimermicroseconds(compasstimer)<70000L) {}
-   
+
    compassreadrawvalues(rawvalues);
-   
+
    // use the general timer to count off our 30 seconds
    unsigned long testtimer=lib_timers_starttimer();
    while (lib_timers_gettimermicroseconds(testtimer)<30000000L)
@@ -111,26 +222,26 @@ void calibratecompass()
          if (rawvalues[x]>maxvalues[x]) maxvalues[x]=rawvalues[x];
          }
       }
-      
+
    for (int x=0;x<3;++x)
       {
       usersettings.compasszerooffset[x]=(minvalues[x]+maxvalues[x])/2;
       usersettings.compasscalibrationmultiplier[x]=(1000L<<FIXEDPOINTSHIFT)/(maxvalues[x]-minvalues[x]);
       }
    }
-   
-void initcompass() 
-   { 
+
+void initcompass()
+   {
       lib_timers_delaymilliseconds(100);
 
    // set gains for calibration
-   
+
    // Other programs use the self test mode of the compass chip to try to calibrate it.  I don't think this is
    // correct.  As far as I can tell, self test mode is just for seeing if it's working.  It's not for calibration.
    lib_i2c_writereg(MAG_ADDRESS ,0x00 ,0x70 ); //Configuration Register A  -- 0 11 100 00  num samples: 8 ; output rate: 15Hz ; normal measurement mode
    lib_i2c_writereg(MAG_ADDRESS ,0x01 ,0x20 ); //Configuration Register B  -- 001 00000    configuration gain 1.3Ga
    lib_i2c_writereg(MAG_ADDRESS ,0x02 ,0x00 ); //Mode register             -- 000000 00    continuous Conversion Mode
-   
+
 //   nextcompassreadtime=lib_timers_millisecondssincestart()+70;
    }
 
@@ -147,7 +258,7 @@ char readcompass()
       return(1);
       }
    else return(0);
-      
+
    }
 
 #endif
