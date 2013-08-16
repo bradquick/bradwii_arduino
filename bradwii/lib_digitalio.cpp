@@ -1416,7 +1416,7 @@ unsigned char pcintnumber;
       }
 #endif
 #ifdef PCINT8_15PORT
-   if (pcintnunber>=8 && pcintnumber<=15)
+   if (pcintnumber>=8 && pcintnumber<=15)
       {
       interruptlastpinstate8_15=PCINT8_15PORT;
       PCICR |= (1<<PCIE1);
