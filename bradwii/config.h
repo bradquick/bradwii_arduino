@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "options.h"
 
 // Choose your control board:
-#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_PRO_2
+//#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_PRO_2
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_MULTIWII_328P
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_NANOWII
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_HK_POCKET_QUAD
@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_SIRIUS_PARIS_V4
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_WITESPY_FLIP
 //#define CONTROL_BOARD_TYPE CONTROL_BOARD_WITESPY_MULTIWII_PRO_2
-//#define CONTROL_BOARD_TYPE CONTROL_BOARD_WITESPY_MULTIWII_PRO_2_GPS
+#define CONTROL_BOARD_TYPE CONTROL_BOARD_WITESPY_MULTIWII_PRO_2_GPS
 
 // Choose the type of r/c reciever that will be used
 #define RX_TYPE RX_NORMAL
@@ -105,8 +105,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define MOTORS_STOP YES
 
 // set the minimum motor output when armed. If not set, 1067 will be used as a default
-//#define ARMED_MIN_MOTOR_OUTPUT 1067 // motors spin slowly when armed
-#define ARMED_MIN_MOTOR_OUTPUT 1170 // motors spin slowly when armed (for blheli flashed q-brain)
+#define ARMED_MIN_MOTOR_OUTPUT 1067 // motors spin slowly when armed
+//#define ARMED_MIN_MOTOR_OUTPUT 1170 // motors spin slowly when armed (for blheli flashed q-brain)
 
 // Optionally set an offset from RX Input to ESC output.  Usually used to make sure
 // the throttle can go to zero.
