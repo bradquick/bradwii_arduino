@@ -166,7 +166,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
       #define MULTIWII_CONFIG_SERIAL_PORTS SERIALPORT0
    #endif
 
-#elif (CONTROL_BOARD_TYPE==CONTROL_BOARD_FLIP)
+#elif (CONTROL_BOARD_TYPE==CONTROL_BOARD_WITESPY_FLIP)
    #define MICROCONTROLLER_TYPE MEGA328P
    #define GYRO_TYPE MPU6050 // gyro
    #define GYRO_ORIENTATION(VALUES,X, Y, Z) {VALUES[ROLLINDEX] =  -Y; VALUES[PITCHINDEX] = X; VALUES[YAWINDEX] = -Z;}
