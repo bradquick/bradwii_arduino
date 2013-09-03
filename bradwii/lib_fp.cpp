@@ -78,6 +78,18 @@ fixedpointnum lib_fp_multiply(fixedpointnum x,fixedpointnum y)
    // doing this in assembly increased the speed tremendously.
    fixedpointnum result;
 
+//char neg=0;
+//if (x<0)
+//   {
+//   x=-x;
+//   neg=!neg;
+//   }
+//if (y<0)
+//   {
+//   y=-y;
+//   neg=!neg;
+//   }
+   
    asm volatile (
       "clr r26 \n\t"
       "mov r16,%C1 \n\t"
@@ -146,7 +158,9 @@ fixedpointnum lib_fp_multiply(fixedpointnum x,fixedpointnum y)
       :
       "r26","r16"
       );
-   
+
+//if (neg) return(-result);
+//if (result<0) return(result+1);
    return(result);
    }
 

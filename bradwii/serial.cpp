@@ -36,7 +36,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "gps.h"
 
 #define MSP_VERSION 0
-#define  VERSION  111 // version 1.11
+#define  VERSION  112 // version 1.12
 
 
 extern globalstruct global;
@@ -76,6 +76,8 @@ void serialinit()
 #define SERIALSTATEGOTDATASIZE 4
 #define SERIALSTATEGOTCOMMAND 5
 #define SERIALSTAGEGOTPAYLOAD 6
+
+#define CAPABILITES 1 | ((BAROMETER_TYPE!=NO_BAROMETER)<<1) | ((COMPASS_TYPE!=NO_COMPASS)<<2) | ((GPS_TYPE!=NO_GPS)<<3)
 
 // datagram format is $M<[data size][command][data...][checksum]
 // response format is $M>[data size][command][data...][checksum]
@@ -202,7 +204,7 @@ void evaluatecommand(char portnumber,unsigned char *data)
       sendgoodheader(portnumber,10);
       sendandchecksumint(portnumber,(global.timesliver*15)>>8); // convert from fixedpointnum to microseconds
       sendandchecksumint(portnumber,lib_i2c_error_count); // i2c error count
-      sendandchecksumint(portnumber,0); // baro mag, gps, sonar
+      sendandchecksumint(portnumber,CAPABILITES); // baro mag, gps, sonar
       sendandchecksumdata(portnumber,(unsigned char *)&global.activecheckboxitems,4); // options1
       }
    else if (command==MSP_MOTOR)
