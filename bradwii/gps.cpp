@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // when adding GPS's, the following functions must be included:
 // initgps()  // does any initialization of the gps
-// readgps()  // sets global.gps_current_latitude in fixedpointnum degrees shifted left by LATLONGEXTRASHIFT
-//                    global.gps_current_longitude in fixedpointnum degrees shifted left by LATLONGEXTRASHIFT
+// readgps()  // sets global.gps_current_latitude in 10,000,000 degrees
+//                    global.gps_current_longitude in 10,000,000 degrees
 //                    global.gps_num_satelites,global.gps_current_altitude in fixedpointnum meters
-//                      returns 1 if a new fix is acquired, 0 otherwise.
+//                      returns 1 if a new location is acquired, 0 otherwise.
 
 extern globalstruct global;
 
@@ -86,31 +86,39 @@ unsigned char hextochar(unsigned char n)
 //   return((degrees<<LATLONGEXTRASHIFT)+lib_fp_multiply(minutes,69905L));  // 69905L is (1/60) * 2^16 * 2^6
 //   }
 
-fixedpointnum gpsstringtoangle(char *string)
-   { // takes a gps string and converts it to a fixedpointnum angle
-   // "4807.123" means 48 degrees, 7.123 minutes, south
+long gpsstringtoangle(char *string)
+   { // takes a gps string and converts it to a long in 10,000,000 degrees
+   // "4807.12300" means 48 degrees, 7.123 minutes, south
    // how many digits are there before the decimal point?
    int index=0;
    while (string[index]>='0' && string[index]<='9') ++index;
 
-   // convert the minutes part.  Use two digits before the decimal and 7 digits after
-   fixedpointnum minutes=0;
-   char *ptr=&string[index]-2;
-   for (int count=0;count<10;++count)
+   // convert the minutes part.  Use two digits before the decimal and 5 digits after
+   // with the decimal point, this gives 10 characters to look at.
+   // The largest raw minute value we should get will be 6,000,000 (7 total digits)
+   long minutes=0;
+   char *ptr=&string[index-2];
+   
+   for (int count=0;count<8;++count)
       {
-      if (*ptr=='.') ++ptr;
+      if (*ptr=='.') ++ptr; // ignore the decimal point
       else
          {
          minutes*=10;
          if (*ptr) minutes+=(*ptr++) - '0';
          }
       }
+   // convert minutes from 100,000 minutes to 10,000,000 degrees
+   // = minutes/60 *100;
+   // = minutes * 1.6666666667;
+   // = (minutes * 1.6666666667<<7)>>7;
+   
    string[index-2]='\0';
-   fixedpointnum degrees=lib_fp_stringtolong(string);
+   
+   long degrees=lib_fp_stringtolong(string);
 
-   return((degrees<<(FIXEDPOINTSHIFT+LATLONGEXTRASHIFT))+(lib_fp_multiply(minutes,117281L)>>8));  // 29318L is (2^16 * 2^6 * 2^16 * 2^6)/(60 * 10^7)
+   return(degrees*10000000L+(lib_fp_multiply(minutes,FIXEDPOINTCONSTANT(213.333333333333333))>>7));
    }
-
 
 char readgps()
    {
@@ -130,6 +138,7 @@ char readgps()
          if (c==',' || c=='*')
             { // we just finished loading a parameter, interpret it
             gpsdata[gpsdataindex]='\0';
+global.debugvalue[0]=gpsparameternumber;
 
             if (gpsparameternumber == 0) 
                { //frame identification
@@ -172,7 +181,8 @@ char readgps()
                if (gpsparameternumber == 7)
                   {
                   // 1 knot = 0.514444444 m / s
-                  global.gps_current_speed=lib_fp_multiply(lib_fp_stringtofixedpointnum(gpsdata),33715L); // 33715L is .514444444 * 2^16
+//                  global.gps_current_speed=lib_fp_multiply(lib_fp_stringtofixedpointnum(gpsdata),33715L); // 33715L is .514444444 * 2^16
+                  global.gps_current_speed=lib_fp_multiply(lib_fp_stringtofixedpointnum(gpsdata),FIXEDPOINTCONSTANT(0.514444444));
                   }
                else if (gpsparameternumber == 8) 
                   {
@@ -248,26 +258,26 @@ char readgps()
         #define I2C_GPS_WP_REG_ACTIVE_MASK    0x0F       // Active Waypoint lower 4 bits
         #define I2C_GPS_WP_REG_PERVIOUS_MASK  0xF0       // pervious Waypoint upper 4 bits
         
-#define I2C_GPS_REG_VERSION                         03   // Version of the I2C_NAV SW uint8_t
-#define I2C_GPS_REG_RES2                            04   // reserved for future use (uint8_t)
-#define I2C_GPS_REG_RES3                            05   // reserved for future use (uint8_t)
-#define I2C_GPS_REG_RES4                            06   // reserved for future use (uint8_t)
+#define I2C_GPS_REG_VERSION                         03   // Version of the I2C_NAV SW unsigned char
+#define I2C_GPS_REG_RES2                            04   // reserved for future use (unsigned char)
+#define I2C_GPS_REG_RES3                            05   // reserved for future use (unsigned char)
+#define I2C_GPS_REG_RES4                            06   // reserved for future use (unsigned char)
 
 
-#define I2C_GPS_LOCATION                            07   // current location 8 byte (lat, lon) int32_t
-#define I2C_GPS_NAV_LAT                             15   // Desired banking towards north/south int16_t
-#define I2C_GPS_NAV_LON                             17   // Desired banking toward east/west    int16_t
+#define I2C_GPS_LOCATION                            07   // current location 8 byte (lat, lon) long
+#define I2C_GPS_NAV_LAT                             15   // Desired banking towards north/south int
+#define I2C_GPS_NAV_LON                             17   // Desired banking toward east/west    int
 #define I2C_GPS_WP_DISTANCE                         19   // Distance to current WP in cm uint32
-#define I2C_GPS_WP_TARGET_BEARING                   23   // bearing towards current wp 1deg = 1000 int16_t
-#define I2C_GPS_NAV_BEARING                         25   // crosstrack corrected bearing towards current wp 1deg = 1000 int16_t
-#define I2C_GPS_HOME_TO_COPTER_BEARING              27   // bearing from home to copter 1deg = 1000 int16_t
-#define I2C_GPS_DISTANCE_TO_HOME                    29   // distance to home in m int16_t
+#define I2C_GPS_WP_TARGET_BEARING                   23   // bearing towards current wp 1deg = 1000 int
+#define I2C_GPS_NAV_BEARING                         25   // crosstrack corrected bearing towards current wp 1deg = 1000 int
+#define I2C_GPS_HOME_TO_COPTER_BEARING              27   // bearing from home to copter 1deg = 1000 int
+#define I2C_GPS_DISTANCE_TO_HOME                    29   // distance to home in m int
         
-#define I2C_GPS_GROUND_SPEED                        31   // GPS ground speed in m/s*100 (uint16_t)      (Read Only)
-#define I2C_GPS_ALTITUDE                            33   // GPS altitude in meters (uint16_t)           (Read Only)
-#define I2C_GPS_GROUND_COURSE                       35   // GPS ground course (uint16_t)
-#define I2C_GPS_RES1                                37   // reserved for future use (uint16_t)
-#define I2C_GPS_TIME                                39   // UTC Time from GPS in hhmmss.sss * 100 (uint32_t)(unneccesary precision) (Read Only)
+#define I2C_GPS_GROUND_SPEED                        31   // GPS ground speed in m/s*100 (unsigned int)      (Read Only)
+#define I2C_GPS_ALTITUDE                            33   // GPS altitude in meters (unsigned int)           (Read Only)
+#define I2C_GPS_GROUND_COURSE                       35   // GPS ground course (unsigned int)
+#define I2C_GPS_RES1                                37   // reserved for future use (unsigned int)
+#define I2C_GPS_TIME                                39   // UTC Time from GPS in hhmmss.sss * 100 (unsigned long)(unneccesary precision) (Read Only)
 
 unsigned long gpstimer;
 
@@ -306,7 +316,7 @@ char readgps()
       *ptr++ = lib_i2c_readack();
       *ptr = lib_i2c_readack();
 
-      global.gps_current_latitude=lib_fp_multiply(longvalue,27488L); // convert from 10,000,000 m to fixedpointnum
+      global.gps_current_latitude=longvalue; //lib_fp_multiply(longvalue,27488L); // convert from 10,000,000 m to fixedpointnum
       
       ptr=(unsigned char *)&longvalue;
       
@@ -315,7 +325,7 @@ char readgps()
       *ptr++ = lib_i2c_readack();
       *ptr = lib_i2c_readnak();
       
-      global.gps_current_longitude=lib_fp_multiply(longvalue,27488L); // convert from 10,000,000 m to fixedpointnum
+      global.gps_current_longitude=longvalue; //lib_fp_multiply(longvalue,27488L); // convert from 10,000,000 m to fixedpointnum
 
       int intvalue;
       ptr= (unsigned char *)&intvalue;
@@ -344,3 +354,190 @@ char readgps()
    }
 
 #endif
+
+#if (GPS_TYPE==UBLOX_GPS)
+
+#include "lib_prg_mem.h"
+
+int gpsdataindex;
+
+// Packet checksum accumulators
+unsigned char checksum_a;
+unsigned char checksum_b;
+
+unsigned char gotfix;
+
+gps_data_struct gps_data;
+
+PROGRAMCHAR UBLOX_INIT[]  =
+   {
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x05,0x00,0xFF,0x19,                            //disable all default NMEA messages
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x03,0x00,0xFD,0x15,
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x01,0x00,0xFB,0x11,
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x00,0x00,0xFA,0x0F,
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x02,0x00,0xFC,0x13,
+   0xB5,0x62,0x06,0x01,0x03,0x00,0xF0,0x04,0x00,0xFE,0x17,
+   0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x02,0x01,0x0E,0x47,                            //set POSLLH MSG rate
+   0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x03,0x01,0x0F,0x49,                            //set STATUS MSG rate
+   0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x06,0x01,0x12,0x4F,                            //set SOL MSG rate
+   0xB5,0x62,0x06,0x01,0x03,0x00,0x01,0x12,0x01,0x1E,0x67,                            //set VELNED MSG rate
+#if (GPS_SBAS_TYPE==SBAS_EGNOS)
+   0xB5,0x62,0x06,0x16,0x08,0x00,0x03,0x07,0x03,0x00,0x51,0x08,0x00,0x00,0x8A,0x41,   //set SBAS to EGNOS
+#elif (GPS_SBAS_TYPE==SBAS_WAAS)
+   0xB5, 0x62, 0x06, 0x16, 0x08, 0x00, 0x03, 0x07, 0x03, 0x00, 0x04, 0xE0, 0x04, 0x00, 0x19, 0x9D,
+#elif (GPS_SBAS_TYPE==SBAS_MSAS)
+   0xB5, 0x62, 0x06, 0x16, 0x08, 0x00, 0x03, 0x07, 0x03, 0x00, 0x00, 0x02, 0x02, 0x00, 0x35, 0xEF,
+#elif (GPS_SBAS_TYPE==SBAS_GAGAN)
+   0xB5, 0x62, 0x06, 0x16, 0x08, 0x00, 0x03, 0x07, 0x03, 0x00, 0x80, 0x01, 0x00, 0x00, 0xB2, 0xE8,
+#else // SBAS_AUTO
+   0xB5, 0x62, 0x06, 0x16, 0x08, 0x00, 0x03, 0x07, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x31, 0xE5,
+#endif
+
+   0xB5, 0x62, 0x06, 0x08, 0x06, 0x00, 0xC8, 0x00, 0x01, 0x00, 0x01, 0x00, 0xDE, 0x6A //set rate to 5Hz
+   };
+
+void sendgpscharslowly(char c)
+   { // add a character to the output buffer, then wait to make sure it goes before we send another one
+   // this way, we can get away with a very small serial output buffer
+   lib_serial_sendchar(GPS_SERIAL_PORT, c);
+   while (!lib_serial_outputbufferisempty(GPS_SERIAL_PORT))
+      {
+      }
+   // the following line may be needed at higher bauds
+//   lib_timers_delaymilliseconds(200);
+   }
+
+void sendgpsstring(PROGRAMCHAR * str)
+   { // send a string from program memory, slowly
+   char b;
+   while (str && (b = lib_prg_mem_getchar(str++)))
+      sendgpscharslowly(b);
+   }
+
+void initgps()
+   {
+   global.gps_num_satelites=0;
+   global.gps_fix=0;
+   gotfix=0;
+   gpsdataindex=PREAMBLE1INDEX; // we are waiting for the preamble 1 character
+   
+   // give the gps tme to boot up
+   lib_timers_delaymilliseconds(1000);
+   
+   // set the gps to the desired baud rate.  Try all different bauds when sending the "set baud rate" message.
+   unsigned long init_speed[5] = {9600,19200,38400,57600,115200};
+   for(unsigned char i=0;i<5;i++)
+      {
+      lib_serial_initport(GPS_SERIAL_PORT,init_speed[i]);          // switch UART speed for sending SET BAUDRATE command (NMEA mode)
+      #if (GPS_BAUD==19200)
+         sendgpsstring(PSTR("$PUBX,41,1,0003,0001,19200,0*23\r\n"));     // 19200 baud - minimal speed for 5Hz update rate
+      #endif  
+      #if (GPS_BAUD==38400)
+         sendgpsstring(PSTR("$PUBX,41,1,0003,0001,38400,0*26\r\n"));     // 38400 baud
+      #endif  
+      #if (GPS_BAUD==57600)
+         sendgpsstring(PSTR("$PUBX,41,1,0003,0001,57600,0*2D\r\n"));     // 57600 baud
+      #endif  
+      #if (GPS_BAUD==115200)
+         sendgpsstring(PSTR("$PUBX,41,1,0003,0001,115200,0*1E\r\n"));    // 115200 baud
+      #endif  
+      lib_timers_delaymilliseconds(200);
+      }
+      
+   lib_serial_initport(GPS_SERIAL_PORT,GPS_BAUD);
+   
+   // send the configuration data in UBX protocol
+   for (unsigned char i=0; i<sizeof(UBLOX_INIT); i++)
+      {
+      sendgpscharslowly(lib_prg_mem_getchar(UBLOX_INIT+i));
+      }
+   }
+
+char handlepacket()
+   {
+   switch (gps_data.msg_id)
+      {
+      case MSG_POSLLH:
+         if (gotfix)
+            { // set lat and longitude in 10,000,000 degrees
+            global.gps_current_longitude = gps_data.posllh.longitude;
+            global.gps_current_latitude = gps_data.posllh.latitude;
+            global.gps_current_altitude = lib_fp_multiply(gps_data.posllh.altitude_msl,FIXEDPOINTCONSTANT(65.536)); // convert from mm to fixedpointnum meters.  65.536 is .001 * 2^16
+            }
+         global.gps_fix = gotfix;
+         return (1); // new location received
+         break;
+      case MSG_SOL:
+         gotfix= 0;
+         if ((gps_data.solution.fix_status & NAV_STATUS_FIX_VALID) && (gps_data.solution.fix_type == FIX_3D || gps_data.solution.fix_type == FIX_2D)) gotfix = 1;
+         global.gps_num_satelites = gps_data.solution.satellites;
+         break;
+      case MSG_VELNED:
+         global.gps_current_speed = lib_fp_multiply(gps_data.velned.speed_2d,FIXEDPOINTCONSTANT(655.36));  // convert from cm/s to fixedpoingnum m/s.  655.35 is .01 * 2^16
+   //      global.gps_current_course = lib_fp_multiply(gps_data.velned.heading_2d,FIXEDPOINTCONSTANT(.065536));  // convert from deg * 100000 to fixedpointnum degrees.   is 10^-6 * 2^16.
+         break;
+      }
+   return(0);
+   }
+
+char readgps()
+   { // check the gps serial port for incoming characters
+   // returns 1 if a new position is acquired
+   while (lib_serial_numcharsavailable(GPS_SERIAL_PORT))
+      {
+      unsigned char c=lib_serial_getchar(GPS_SERIAL_PORT);
+
+      if (gpsdataindex==PREAMBLE1INDEX)
+         {
+         if (c==PREAMBLE1)
+            { // we recieved the first byte correctly
+            ++gpsdataindex;
+            }
+         }
+      else if (gpsdataindex==PREAMBLE2INDEX)
+         {
+         if (c==PREAMBLE2)
+            { // we recieved the second byte correctly
+            checksum_a=checksum_b=0;
+            
+            ++gpsdataindex;
+            }
+         else gpsdataindex=PREAMBLE1;
+         }
+      else if (gpsdataindex==CHECKSUMAINDEX)
+         {
+         if (c==checksum_a) ++gpsdataindex;
+         else gpsdataindex=PREAMBLE1INDEX; // start over
+         }
+      else if (gpsdataindex==CHECKSUMBINDEX)
+         {
+         gpsdataindex=PREAMBLE1INDEX; // start over
+         if (c==checksum_b) return(handlepacket());
+         }
+      else // we must be into the data part of the packet
+         {
+         unsigned char *gps_data_ptr=(unsigned char *)&gps_data;
+         
+         gps_data_ptr[gpsdataindex++]=c;
+         
+         checksum_a+=c;
+         checksum_b+=checksum_a;
+         
+         if (gpsdataindex==GOTLENGTHINDEX)
+            { // we just finished receiving the length
+            if (gps_data.length>sizeof(gps_data_struct)-4)
+               { // this packet is going to be too long to fit into our data structure.  Start over.
+               gpsdataindex=PREAMBLE1INDEX;
+               }
+            }
+         else if (gpsdataindex>=gps_data.length+4)
+            { // we have received the whole packet.  Get ready for the checksum
+            gpsdataindex=CHECKSUMAINDEX;
+            }
+         }
+      }
+   return(0); // didn't receive new location
+   }
+
+#endif
+      

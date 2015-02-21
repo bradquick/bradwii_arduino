@@ -281,7 +281,11 @@ fixedpointnum atanlist[]=
    7334L,
    3667L,
    1833L,
-   917L
+   917L,
+   458L,
+   229L,
+   115L,
+   57L
    };
 
 // cordic arctan2 using no division!
@@ -322,7 +326,7 @@ fixedpointnum lib_fp_atan2(fixedpointnum y, fixedpointnum x)
       y *= 0x1000;
       }
 
-   for (int i=1; i<11; i++) // increase the accuracy by increasing the number of cycles (was 12)
+   for (int i=1; i<17; i++) // increase the accuracy by increasing the number of cycles (was 11 for quadcopter)
       {
       if   (y>=0)
          {

@@ -92,12 +92,18 @@ volatile int serialtxbufferstartindex[NUMSERIALPORTS];
 volatile int serialtxbufferendindex[NUMSERIALPORTS];
 unsigned char *serialrxbuffer[NUMSERIALPORTS];
 int serialrxbuffersize[NUMSERIALPORTS];
-int serialrxbufferstartindex[NUMSERIALPORTS];
+volatile int serialrxbufferstartindex[NUMSERIALPORTS];
 volatile int serialrxbufferendindex[NUMSERIALPORTS];
 serialcallbackfunctptr serialrxcallback[NUMSERIALPORTS];
 
+char lib_serial_outputbufferisempty(unsigned char serialportnumber)
+   {
+   return(serialtxbufferstartindex[serialportnumber]==serialtxbufferendindex[serialportnumber]);
+   }
+
 int lib_serial_availableoutputbuffersize(unsigned char serialportnumber)
-   { // returns how many more bytes can fit in the outputbuffer
+   { // returns how many more bytes can fit in the outputbuffer.  We can't use every byte because the
+   // start and end pointers will be even and we will think the buffer is empty.
 #ifdef USESERIALPORTUSB
    if (serialportnumber==USBPORTNUMBER) return(9999);
 #endif
@@ -108,7 +114,6 @@ int lib_serial_availableoutputbuffersize(unsigned char serialportnumber)
       return(startindex-endindex-1);
    else
       return(serialtxbuffersize[serialportnumber]-(endindex-startindex)-1);
-
    }
 
 void lib_serial_setrxcallback(unsigned char serialportnumber,serialcallbackfunctptr callback)
@@ -174,12 +179,14 @@ void lib_serial_initport(unsigned char serialportnumber,long baud)
          }\
       else\
          {\
-         udr = serialtxbuffer[serialportnumber][serialtxbufferstartindex[serialportnumber]++];\
-         ucsrb |= ( 1 << udrie ); /* turn on the interrupt to tell us when we are ready to send another character*/\
-         if (serialtxbufferstartindex[serialportnumber]==serialtxbuffersize[serialportnumber]) serialtxbufferstartindex[serialportnumber]=0;\
-         }\
+         udr = serialtxbuffer[serialportnumber][serialtxbufferstartindex[serialportnumber]];\
+         if (serialtxbufferstartindex[serialportnumber]+1==serialtxbuffersize[serialportnumber])\
+            serialtxbufferstartindex[serialportnumber]=0;\
+         else\
+            ++serialtxbufferstartindex[serialportnumber];\
+          ucsrb |= ( 1 << udrie ); /* turn on the interrupt to tell us when we are ready to send another character*/\
+        }\
       }
-         
          
 void serialsendthenextchar(unsigned char serialportnumber)
    { // this should only be called internally.  It sends the next character in the send buffer to the hardware
@@ -210,10 +217,18 @@ void lib_serial_sendchar(unsigned char serialportnumber,unsigned char c)
       }
 #endif
       
-   sei();
+//   sei();
 //   cli(); // disable interrupts while we do this so the interrupt handler doesn't change things on us
-   serialtxbuffer[serialportnumber][serialtxbufferendindex[serialportnumber]++]=c;
-   if (serialtxbufferendindex[serialportnumber]==serialtxbuffersize[serialportnumber]) serialtxbufferendindex[serialportnumber]=0;
+//   serialtxbuffer[serialportnumber][serialtxbufferendindex[serialportnumber]++]=c;
+//   if (serialtxbufferendindex[serialportnumber]==serialtxbuffersize[serialportnumber]) serialtxbufferendindex[serialportnumber]=0;
+
+   serialtxbuffer[serialportnumber][serialtxbufferendindex[serialportnumber]]=c;
+   if (serialtxbufferendindex[serialportnumber]+1==serialtxbuffersize[serialportnumber])
+      serialtxbufferendindex[serialportnumber]=0;
+   else
+      ++serialtxbufferendindex[serialportnumber];
+   
+   sei();
 
    // if we aren't already sending something, we need to get the ball rolling by sending the first character
    // if the transmit buffer empty interrupt flag isn't set then we aren't currently sending anything.
@@ -229,10 +244,9 @@ void lib_serial_sendchar(unsigned char serialportnumber,unsigned char c)
 #ifdef USESERIALPORT3
    SERIALSENDCHARMACRO(3,UCSR3B,UDRIE3);
 #endif
-//   sei();
    }
    
-void lib_serial_sendstring(unsigned char serialportnumber,char *string)
+void lib_serial_sendstring(unsigned char serialportnumber,const char *string)
    { // adds the string to the output buffer.
    while (*string) lib_serial_sendchar(serialportnumber,*string++);
    }
@@ -271,8 +285,11 @@ unsigned char lib_serial_getchar(unsigned char serialportnumber)
       }
 #endif
 
-   unsigned char returnvalue=serialrxbuffer[serialportnumber][serialrxbufferstartindex[serialportnumber]++];
-   if (serialrxbufferstartindex[serialportnumber]==serialrxbuffersize[serialportnumber]) serialrxbufferstartindex[serialportnumber]=0;
+   unsigned char returnvalue=serialrxbuffer[serialportnumber][serialrxbufferstartindex[serialportnumber]];
+   if (serialrxbufferstartindex[serialportnumber]+1==serialrxbuffersize[serialportnumber])
+      serialrxbufferstartindex[serialportnumber]=0;
+   else
+      ++serialrxbufferstartindex[serialportnumber];
    return(returnvalue);
    }
 
@@ -293,8 +310,11 @@ void serialaddcharactertoreceivebuffer(unsigned char serialportnumber,unsigned c
       }
    else
       {
-      serialrxbuffer[serialportnumber][serialrxbufferendindex[serialportnumber]++]=c;
-      if (serialrxbufferendindex[serialportnumber]==serialrxbuffersize[serialportnumber]) serialrxbufferendindex[serialportnumber]=0;
+      serialrxbuffer[serialportnumber][serialrxbufferendindex[serialportnumber]]=c;
+      if (serialrxbufferendindex[serialportnumber]+1==serialrxbuffersize[serialportnumber])
+         serialrxbufferendindex[serialportnumber]=0;
+      else
+         ++serialrxbufferendindex[serialportnumber];
       }
    }
    

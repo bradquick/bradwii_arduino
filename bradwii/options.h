@@ -27,9 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CONTROL_BOARD_SIRIUS_AIR 5
 #define CONTROL_BOARD_SIRIUS_AIR_GPS 6
 #define CONTROL_BOARD_SIRIUS_PARIS_V4 7
-#define CONTROL_BOARD_WITESPY_FLIP 8
-#define CONTROL_BOARD_WITESPY_MULTIWII_PRO_2 9
-#define CONTROL_BOARD_WITESPY_MULTIWII_PRO_2_GPS 10
+#define CONTROL_BOARD_SIRIUS_PARIS_V4_GPS 8
+#define CONTROL_BOARD_WITESPY_FLIP 9
+#define CONTROL_BOARD_WITESPY_MULTIWII_PRO_2 10
+#define CONTROL_BOARD_WITESPY_MULTIWII_PRO_2_GPS 11
 
 // MICROCONTROLLER_TYPE's
 #define MEGA2560 0
@@ -68,6 +69,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define NO_GPS 0
 #define SERIAL_GPS 1
 #define I2C_GPS 2
+#define UBLOX_GPS 3
+
+// GPS_SBAS_TYPE
+#define SBAS_AUTO 0
+#define SBAS_EGNOS 1
+#define SBAS_WAAS 2
+#define SBAS_MSAS 3
+#define SBAS_GAGAN 4
 
 // COMPASS_TYPE's
 #define NO_COMPASS 0
@@ -95,6 +104,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RX_DSM2_1024 1
 #define RX_DSM2_2048 2
 #define RX_CPPM 3
+#define RX_SBUS 4
 
 // Stick Command stick positions
 #define STICK_COMMAND_ROLL_LOW (1<<0)
@@ -103,6 +113,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define STICK_COMMAND_PITCH_HIGH (1<<3)
 #define STICK_COMMAND_YAW_LOW (1<<4)
 #define STICK_COMMAND_YAW_HIGH (1<<5)
+
+// telemetry modes
+#define NOTELEMETRY 0
+#define TELEMETRYFRSKYHUB 1
+#define TELEMETRYFRSKYSMARTPORT 2
 
 // general yes/no (used for MOTOR_STOP)
 #define YES 1

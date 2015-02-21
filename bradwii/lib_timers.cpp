@@ -199,7 +199,7 @@ unsigned long lib_timers_starttimer()
    return(lib_timers_getcurrentmicroseconds());
    }
    
-void    lib_timers_delaymilliseconds(unsigned long delaymilliseconds)
+void lib_timers_delaymilliseconds(unsigned long delaymilliseconds)
    {
    unsigned long timercounts=lib_timers_starttimer();
    while (lib_timers_gettimermicroseconds(timercounts)<delaymilliseconds*1000L) {}

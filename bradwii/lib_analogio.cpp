@@ -18,7 +18,6 @@ void lib_analogio_init(int reference,char autotrigger)
       }
    else
       {
-	  
       if (reference==ADCREFVCC)
          ADMUX=(1 << REFS0); // Set the reference voltage to Vcc
       else if (reference==ADCREF1POINT1)
@@ -41,13 +40,16 @@ void lib_analogio_setchannel(int channel)
    { // set up and enable the adc to read channel channel
 	// we can read the reference voltage instead of a channel if we want, otherwise channels go from
 	// 0-7
-	ADMUX &= (~0x07); // clear out the old channel
+	ADMUX &= (~0x1F); // clear out the old channel
 	
 	if (channel==ADCCHANREF1POINT1)
 //         ADMUX |= 0x0E; // Set ADC reference to AVCC and mux channel to 1.1v internal
 		ADMUX |= (1<<MUX3) | (1<<MUX2) | (1<<MUX1); // Set ADC reference to AVCC and mux channel to 1.1v internal
 	else
-		ADMUX |= channel; // Set ADC reference to AVCC and mux channel to channel	  
+      {
+//      if (channel>=8) channel+=24; // this works on atmega32u.  I don't know about other controllers
+		ADMUX |= channel; // Set ADC reference to AVCC and mux channel to channel
+      }
    }
 
 void lib_analogio_startreading()
@@ -59,8 +61,18 @@ void lib_analogio_startreading()
 unsigned int lib_analogio_getreading()
    {
    // get the reading
-   unsigned int result=ADCL;
-   result|=ADCH<<8;
+   unsigned int result;
+   
+//   if (ADMUX & (1<<ADLAR))
+//      {
+//      result=(ADCL>>6);
+//      result|=(ADCH<<2);
+//      }
+//   else
+      {
+      result=ADCL;
+      result|=ADCH<<8;
+      }
    
    return(result);
    }
